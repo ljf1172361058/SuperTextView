@@ -67,6 +67,12 @@ public class SuperTextView extends RelativeLayout {
 
     private int leftTVMarginLeft;//左边文字的左边距
 
+    private int leftIconWidth;//左边图标的宽
+    private int leftIconHeight;//左边图标的高
+
+    private int rightIconWidth;//右边图标的宽
+    private int rightIconHeight;//右边图标的高
+
     private int leftTopMarginLeft;//左上文字的左边距
     private int leftBottomMarginLeft;//左下文字的左边距
     private int leftBottomMarginLeft2;//左下第二个文字的左边距
@@ -126,6 +132,9 @@ public class SuperTextView extends RelativeLayout {
     private Drawable rightTextStringRightIconRes;
     private int rightTextStringRightIconPadding;
 
+    private boolean mLeftTopViewIsClickable = false;
+    private boolean mLeftBottomViewIsClickable = false;
+    private boolean mLeftBottomView2IsClickable = false;
 
     public SuperTextView(Context context) {
         super(context);
@@ -162,7 +171,7 @@ public class SuperTextView extends RelativeLayout {
         rightTextString = typedArray.getString(R.styleable.SuperTextView_sRightTextString);
 
         rightTextStringRightIconRes = typedArray.getDrawable(R.styleable.SuperTextView_sRightTextStringRightIconRes);
-        rightTextStringRightIconPadding = typedArray.getDimensionPixelSize(R.styleable.SuperTextView_sRightTextStringRightIconResPadding,dip2px(mContext,5));
+        rightTextStringRightIconPadding = typedArray.getDimensionPixelSize(R.styleable.SuperTextView_sRightTextStringRightIconResPadding, dip2px(mContext, 5));
 
         leftTopTextString = typedArray.getString(R.styleable.SuperTextView_sLeftTopTextString);
         leftBottomTextString = typedArray.getString(R.styleable.SuperTextView_sLeftBottomTextString);
@@ -177,9 +186,9 @@ public class SuperTextView extends RelativeLayout {
         /////////设置view的边距////////
         centerSpaceHeight = typedArray.getDimensionPixelSize(R.styleable.SuperTextView_sCenterSpaceHeight, centerSpaceHeight);
 
-        bothLineWidth = typedArray.getDimensionPixelSize(R.styleable.SuperTextView_sBothLineWidth, dip2px(mContext,0.5f));
-        topLineWidth = typedArray.getDimensionPixelSize(R.styleable.SuperTextView_sTopLineWidth, dip2px(mContext,0.5f));
-        bottomLineWidth = typedArray.getDimensionPixelSize(R.styleable.SuperTextView_sBottomLineWidth, dip2px(mContext,0.5f));
+        bothLineWidth = typedArray.getDimensionPixelSize(R.styleable.SuperTextView_sBothLineWidth, dip2px(mContext, 0.5f));
+        topLineWidth = typedArray.getDimensionPixelSize(R.styleable.SuperTextView_sTopLineWidth, dip2px(mContext, 0.5f));
+        bottomLineWidth = typedArray.getDimensionPixelSize(R.styleable.SuperTextView_sBottomLineWidth, dip2px(mContext, 0.5f));
 
         lineColor = typedArray.getColor(R.styleable.SuperTextView_sLineColor, lineColor);
 
@@ -212,10 +221,21 @@ public class SuperTextView extends RelativeLayout {
         rightTVSize = typedArray.getDimensionPixelSize(R.styleable.SuperTextView_sRightTextSize, defaultSize);
         centerTVSize = typedArray.getDimensionPixelSize(R.styleable.SuperTextView_sCenterTextSize, defaultSize);
 
-        ///////设置textView的属性///////////
+        ///////设置textView的属性///////////SuperTextViewxEms
         isSingLines = typedArray.getBoolean(R.styleable.SuperTextView_sIsSingLines, isSingLines);
         maxLines = typedArray.getInt(R.styleable.SuperTextView_sMaxLines, maxLines);
         maxEms = typedArray.getInt(R.styleable.SuperTextView_sMaxEms, maxEms);
+
+        leftIconWidth = typedArray.getDimensionPixelSize(R.styleable.SuperTextView_sLeftIconWidth, 0);
+        leftIconHeight = typedArray.getDimensionPixelSize(R.styleable.SuperTextView_sLeftIconHeight, 0);
+
+        rightIconWidth = typedArray.getDimensionPixelSize(R.styleable.SuperTextView_sRightIconWidth, 0);
+        rightIconHeight = typedArray.getDimensionPixelSize(R.styleable.SuperTextView_sRightIconHeight, 0);
+
+        mLeftTopViewIsClickable = typedArray.getBoolean(R.styleable.SuperTextView_sLeftTopViewIsClickable, false);
+        mLeftBottomViewIsClickable = typedArray.getBoolean(R.styleable.SuperTextView_sLeftBottomViewIsClickable, false);
+        mLeftBottomView2IsClickable = typedArray.getBoolean(R.styleable.SuperTextView_sLeftBottomView2IsClickable, false);
+
         typedArray.recycle();
     }
 
@@ -259,14 +279,14 @@ public class SuperTextView extends RelativeLayout {
             case NONE:
                 break;
             case TOP:
-                initTopLine(topLineMargin,topLineWidth);
+                initTopLine(topLineMargin, topLineWidth);
                 break;
             case BOTTOM:
-                initBottomLine(bottomLineMargin,bottomLineWidth);
+                initBottomLine(bottomLineMargin, bottomLineWidth);
                 break;
             case BOTH:
-                initTopLine(bothLineMargin,bothLineWidth);
-                initBottomLine(bothLineMargin,bothLineWidth);
+                initTopLine(bothLineMargin, bothLineWidth);
+                initBottomLine(bothLineMargin, bothLineWidth);
                 break;
         }
     }
@@ -275,7 +295,7 @@ public class SuperTextView extends RelativeLayout {
     /**
      * 初始化上边的线
      */
-    private void initTopLine(int lineMargin,int lineWidth) {
+    private void initTopLine(int lineMargin, int lineWidth) {
         View topLine = new View(mContext);
         topLineParams = new LayoutParams(LayoutParams.MATCH_PARENT, lineWidth);
         topLineParams.addRule(RelativeLayout.ALIGN_PARENT_TOP, TRUE);
@@ -288,7 +308,7 @@ public class SuperTextView extends RelativeLayout {
     /**
      * 初始化下边的线
      */
-    private void initBottomLine(int lineMargin,int lineWidth) {
+    private void initBottomLine(int lineMargin, int lineWidth) {
         View bottomLine = new View(mContext);
         bottomLineParams = new LayoutParams(LayoutParams.MATCH_PARENT, lineWidth);
         bottomLineParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, TRUE);
@@ -341,8 +361,12 @@ public class SuperTextView extends RelativeLayout {
         leftImgParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         leftImgParams.addRule(ALIGN_PARENT_LEFT, TRUE);
         leftImgParams.addRule(RelativeLayout.CENTER_VERTICAL, TRUE);
+        if (leftIconHeight != 0 && leftIconWidth != 0) {
+            leftImgParams.width = leftIconWidth;
+            leftImgParams.height = leftIconHeight;
+        }
         setMargin(leftImgParams, leftIconMarginLeft, 0, 0, 0);
-        leftIconIV.setScaleType(ImageView.ScaleType.CENTER);
+        leftIconIV.setScaleType(ImageView.ScaleType.FIT_CENTER);
         leftIconIV.setId(R.id.sLeftIconId);
         leftIconIV.setLayoutParams(leftImgParams);
         if (leftIconRes != null) {
@@ -400,14 +424,16 @@ public class SuperTextView extends RelativeLayout {
         leftTopTV.setText(leftTopTextString);
         setTextColor(leftTopTV, leftTopTVColor);
         setTextSize(leftTopTV, leftTopTVSize);
-        leftTopTV.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (onSuperTextViewClickListener != null) {
-                    onSuperTextViewClickListener.onLeftTopClick();
+        if (mLeftTopViewIsClickable) {
+            leftTopTV.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (onSuperTextViewClickListener != null) {
+                        onSuperTextViewClickListener.onLeftTopClick();
+                    }
                 }
-            }
-        });
+            });
+        }
         setTextViewParams(leftTopTV, isSingLines, maxLines, maxEms);
         addView(leftTopTV);
     }
@@ -426,14 +452,16 @@ public class SuperTextView extends RelativeLayout {
         leftBottomTV.setText(leftBottomTextString);
         setTextColor(leftBottomTV, leftBottomTVColor);
         setTextSize(leftBottomTV, leftBottomTVSize);
-        leftBottomTV.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (onSuperTextViewClickListener != null) {
-                    onSuperTextViewClickListener.onLeftBottomClick();
+        if (mLeftBottomViewIsClickable) {
+            leftBottomTV.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (onSuperTextViewClickListener != null) {
+                        onSuperTextViewClickListener.onLeftBottomClick();
+                    }
                 }
-            }
-        });
+            });
+        }
         setTextViewParams(leftBottomTV, isSingLines, maxLines, maxEms);
         addView(leftBottomTV);
     }
@@ -452,14 +480,16 @@ public class SuperTextView extends RelativeLayout {
         leftBottomTV2.setText(leftBottomTextString2);
         setTextColor(leftBottomTV2, leftBottomTVColor2);
         setTextSize(leftBottomTV2, leftBottomTVSize2);
-        leftBottomTV2.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (onSuperTextViewClickListener != null) {
-                    onSuperTextViewClickListener.onLeftBottomClick2();
+        if (mLeftBottomView2IsClickable) {
+            leftBottomTV2.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (onSuperTextViewClickListener != null) {
+                        onSuperTextViewClickListener.onLeftBottomClick2();
+                    }
                 }
-            }
-        });
+            });
+        }
         setTextViewParams(leftBottomTV2, isSingLines, maxLines, maxEms);
         addView(leftBottomTV2);
     }
@@ -496,7 +526,7 @@ public class SuperTextView extends RelativeLayout {
         rightTV.setText(rightTextString);
         setTextColor(rightTV, rightTVColor);
         setTextSize(rightTV, rightTVSize);
-        setTextViewRightDrawble(rightTV,rightTextStringRightIconRes,rightTextStringRightIconPadding);
+        setTextViewRightDrawble(rightTV, rightTextStringRightIconRes, rightTextStringRightIconPadding);
         rightTV.setGravity(Gravity.RIGHT);
         setTextViewParams(rightTV, isSingLines, maxLines, maxEms);
         addView(rightTV);
@@ -510,8 +540,12 @@ public class SuperTextView extends RelativeLayout {
         rightImgParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         rightImgParams.addRule(ALIGN_PARENT_RIGHT, TRUE);
         rightImgParams.addRule(RelativeLayout.CENTER_VERTICAL, TRUE);
+        if (rightIconHeight != 0 && rightIconWidth != 0) {
+            rightImgParams.width = rightIconWidth;
+            rightImgParams.height = rightIconHeight;
+        }
         setMargin(rightImgParams, 0, 0, rightIconMarginRight, 0);
-        rightIconIV.setScaleType(ImageView.ScaleType.CENTER);
+        rightIconIV.setScaleType(ImageView.ScaleType.FIT_CENTER);
         rightIconIV.setId(R.id.sRightIconId);
         rightIconIV.setLayoutParams(rightImgParams);
         if (rightIconRes != null) {
@@ -693,12 +727,13 @@ public class SuperTextView extends RelativeLayout {
 
     /**
      * 设置右边显示的文字和图片
-     * @param rightString 右边文字
-     * @param drawable   drawable
-     * @param drawablePadding   drawablePadding
+     *
+     * @param rightString     右边文字
+     * @param drawable        drawable
+     * @param drawablePadding drawablePadding
      * @return
      */
-    public SuperTextView setRightString(String rightString,Drawable drawable,int drawablePadding) {
+    public SuperTextView setRightString(String rightString, Drawable drawable, int drawablePadding) {
         rightTextString = rightString;
         rightTextStringRightIconRes = drawable;
         rightTextStringRightIconPadding = drawablePadding;
@@ -854,6 +889,7 @@ public class SuperTextView extends RelativeLayout {
 
     /**
      * 点击事件
+     *
      * @param listener listener对象
      * @return 返回对象
      */
@@ -983,11 +1019,78 @@ public class SuperTextView extends RelativeLayout {
         return (int) (spValue * scale + 0.5f);
     }
 
-    public static void setTextViewRightDrawble(TextView textView,Drawable drawable,int drawablePadding){
+    public static void setTextViewRightDrawble(TextView textView, Drawable drawable, int drawablePadding) {
         if (drawable != null && textView != null) {
             drawable.setBounds(0, 0, drawable.getMinimumWidth(), drawable.getMinimumHeight());
             textView.setCompoundDrawables(null, null, drawable, null);
             textView.setCompoundDrawablePadding(drawablePadding);
         }
+    }
+
+    /**
+     * 设置左上view可点击
+     *
+     * @param isClickable boolean类型
+     * @return 返回
+     */
+    public SuperTextView setLeftTopViewIsClickable(boolean isClickable) {
+        if (isClickable) {
+            if (leftTopTV != null) {
+                leftTopTV.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if (onSuperTextViewClickListener != null) {
+                            onSuperTextViewClickListener.onLeftTopClick();
+                        }
+                    }
+                });
+            }
+        }
+
+        return this;
+    }
+
+    /**
+     * 设置左下第一个view可点击
+     *
+     * @param isClickable boolean类型
+     * @return 返回
+     */
+    public SuperTextView setLeftBottomViewIsClickable(boolean isClickable) {
+        if (isClickable) {
+            if (leftBottomTV != null) {
+                leftBottomTV.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if (onSuperTextViewClickListener != null) {
+                            onSuperTextViewClickListener.onLeftBottomClick();
+                        }
+                    }
+                });
+            }
+        }
+        return this;
+    }
+
+    /**
+     * 设置左下第二个view可点击
+     *
+     * @param isClickable boolean类型
+     * @return 返回
+     */
+    public SuperTextView setLeftBottomView2IsClickable(boolean isClickable) {
+        if (isClickable) {
+            if (leftBottomTV2 != null) {
+                leftBottomTV2.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if (onSuperTextViewClickListener != null) {
+                            onSuperTextViewClickListener.onLeftBottomClick2();
+                        }
+                    }
+                });
+            }
+        }
+        return this;
     }
 }
